@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from google.cloud import firestore
 from server.Web.api.schemas import UserStatus, UserList, DestinationRequest, CancelRequest
 from server.Web.firestore import get_firestore_client
+from datetime import datetime
 
 # FastAPIのルーターを作成
 api = APIRouter()
@@ -28,7 +29,19 @@ async def get_all_user_status(db: firestore.Client = Depends(get_firestore_clien
     users = []
     for doc in docs:
         data = doc.to_dict()  # Firestoreドキュメントを辞書形式に変換
-        user = UserStatus(id=data["id"], status=data["status"])
+
+        # 存在しないカラムにはデフォルト値を指定
+        user_id = doc.id  # ドキュメントのIDを取得
+        name = data.get("name", "Unknown")  # nameが存在しない場合は"Unknown"を使用
+        status = data.get("status", "closed")  # statusが存在しない場合は"closed"を使用
+        # "close"という不正な値がある場合は"closed"に置き換える
+        if status == "close":
+            status = "closed"
+
+        created_at = data.get("created_at", datetime.utcnow())  # created_atがない場合のデフォルト
+
+        # Pydanticモデルに渡す
+        user = UserStatus(user_id=user_id, name=name, status=status, created_at=created_at)
         users.append(user)
 
     return UserList(users=users)
@@ -41,7 +54,23 @@ async def get_user_status(user_id: str, db: firestore.Client = Depends(get_fires
 
     if user_doc.exists:
         data = user_doc.to_dict()
-        return UserStatus(id=data["id"], status=data["status"])
+
+        # ドキュメントIDを取得
+        user_id = user_doc.id
+
+        # "name"が存在しない場合のデフォルト
+        name = data.get("name", "Unknown")
+
+        # "status"が不正な値を持つ場合のクリーニング
+        status = data.get("status", "closed")
+        if status == "close":  # "close" を "closed" に変換
+            status = "closed"
+
+        # "created_at"が存在しない場合のデフォルト
+        created_at = data.get("created_at", datetime.utcnow())
+
+        # UserStatusモデルにデータを渡す
+        return UserStatus(user_id=user_id, name=name, status=status, created_at=created_at)
     else:
         raise HTTPException(status_code=404, detail="User not found")
 
