@@ -1,32 +1,11 @@
-import os
-import json
 from fastapi import APIRouter, Depends, HTTPException
-from uuid import UUID
 from datetime import datetime
 from google.cloud import firestore
-from google.oauth2 import service_account
 from server.Web.api.schemas import UserStatus, UserList, StatusEnum
 from server.Web.firestore import get_firestore_client
 
 # FastAPIのルーターを作成
 api = APIRouter()
-
-# サンプルデータ：ユーザーのステータス情報
-sample_users = {
-    UUID("c9b1b9b5-5e8c-456a-a8f7-23dabaafca9a"): UserStatus(
-        user_id=UUID("c9b1b9b5-5e8c-456a-a8f7-23dabaafca9a"),
-        name="Alice",
-        status=StatusEnum.open,
-        created_at=datetime(2023, 9, 1)
-    ),
-    UUID("b5d9c9b9-b91e-45d6-90d1-40e91b9443ca"): UserStatus(
-        user_id=UUID("b5d9c9b9-b91e-45d6-90d1-40e91b9443ca"),
-        name="Bob",
-        status=StatusEnum.closed,
-        created_at=datetime(2023, 6, 15)
-    )
-}
-
 
 # Firestoreのユーザーが存在するかを確認する関数
 def check_user_exists(user_id: str, db: firestore.Client):
