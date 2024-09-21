@@ -30,3 +30,10 @@ class UserStatus(BaseModel):
 # ユーザーのリストを返すスキーマ
 class UserList(BaseModel):
     users: List[UserStatus]
+
+# リクエストボディの定義
+class DestinationRequest(BaseModel):
+    destination_user_id: str  # フレンドのID
+
+class CancelRequest(BaseModel):
+    friend_id: str  # キャンセルする友人のID
