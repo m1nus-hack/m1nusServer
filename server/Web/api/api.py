@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
-from datetime import datetime
 from google.cloud import firestore
-from server.Web.api.schemas import UserStatus, UserList, StatusEnum
+from server.Web.api.schemas import UserStatus, UserList, DestinationRequest, CancelRequest
 from server.Web.firestore import get_firestore_client
+from datetime import datetime
 
 # FastAPIのルーターを作成
 api = APIRouter()
@@ -29,7 +29,19 @@ async def get_all_user_status(db: firestore.Client = Depends(get_firestore_clien
     users = []
     for doc in docs:
         data = doc.to_dict()  # Firestoreドキュメントを辞書形式に変換
-        user = UserStatus(id=data["id"], status=data["status"])
+
+        # 存在しないカラムにはデフォルト値を指定
+        user_id = doc.id  # ドキュメントのIDを取得
+        name = data.get("name", "Unknown")  # nameが存在しない場合は"Unknown"を使用
+        status = data.get("status", "closed")  # statusが存在しない場合は"closed"を使用
+        # "close"という不正な値がある場合は"closed"に置き換える
+        if status == "close":
+            status = "closed"
+
+        created_at = data.get("created_at", datetime.utcnow())  # created_atがない場合のデフォルト
+
+        # Pydanticモデルに渡す
+        user = UserStatus(user_id=user_id, name=name, status=status, created_at=created_at)
         users.append(user)
 
     return UserList(users=users)
@@ -42,7 +54,23 @@ async def get_user_status(user_id: str, db: firestore.Client = Depends(get_fires
 
     if user_doc.exists:
         data = user_doc.to_dict()
-        return UserStatus(id=data["id"], status=data["status"])
+
+        # ドキュメントIDを取得
+        user_id = user_doc.id
+
+        # "name"が存在しない場合のデフォルト
+        name = data.get("name", "Unknown")
+
+        # "status"が不正な値を持つ場合のクリーニング
+        status = data.get("status", "closed")
+        if status == "close":  # "close" を "closed" に変換
+            status = "closed"
+
+        # "created_at"が存在しない場合のデフォルト
+        created_at = data.get("created_at", datetime.utcnow())
+
+        # UserStatusモデルにデータを渡す
+        return UserStatus(user_id=user_id, name=name, status=status, created_at=created_at)
     else:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -96,3 +124,51 @@ async def delete_friend(user_id: str, friend_id: str, db: firestore.Client = Dep
     })
 
     return {"message": "Friend deleted successfully"}
+
+# ユーザーがフレンドに「いく！」を押すエンドポイント
+@api.post("/users/{user_id}/destination")
+async def go_to_friend(user_id: str, request: DestinationRequest, db: firestore.Client = Depends(get_firestore_client)):
+    user_ref = db.collection('users').document(user_id)
+
+    # Firestoreでユーザーのドキュメントを更新
+    try:
+        user_ref.update({
+            "destination_user_id": request.destination_user_id  # 行き先のフレンドIDを設定
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # フレンドのcomming_friendsに追加
+    friend_ref = db.collection('users').document(request.destination_user_id)
+    try:
+        friend_ref.update({
+            "comming_friends": firestore.ArrayUnion([user_id])  # フレンドのリストに自分を追加
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"message": "Destination and comming friends updated successfully"}
+
+# ユーザーが「[いく！]ボタンキャンセル」を押すエンドポイント
+@api.patch("/users/{user_id}/cancel")
+async def cancel_trip(user_id: str, request: CancelRequest, db: firestore.Client = Depends(get_firestore_client)):
+    user_ref = db.collection('users').document(user_id)
+
+    # 自分のdestinationをクリア
+    try:
+        user_ref.update({
+            "destination_user_id": firestore.DELETE_FIELD  # 行き先を削除
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # フレンドのcomming_friendsリストから自分を削除
+    friend_ref = db.collection('users').document(request.friend_id)
+    try:
+        friend_ref.update({
+            "comming_friends": firestore.ArrayRemove([user_id])  # フレンドのリストから自分を削除
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"message": "Trip cancelled successfully"}

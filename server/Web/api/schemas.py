@@ -11,8 +11,8 @@ class StatusEnum(str, Enum):
 # ユーザーのステータススキーマ
 class UserStatus(BaseModel):
     user_id: str
-    name: str
-    status: StatusEnum
+    name: str = "unknown"
+    status: StatusEnum = StatusEnum.closed
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
@@ -30,3 +30,10 @@ class UserStatus(BaseModel):
 # ユーザーのリストを返すスキーマ
 class UserList(BaseModel):
     users: List[UserStatus]
+
+# リクエストボディの定義
+class DestinationRequest(BaseModel):
+    destination_user_id: str  # フレンドのID
+
+class CancelRequest(BaseModel):
+    friend_id: str  # キャンセルする友人のID
