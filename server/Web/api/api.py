@@ -29,7 +29,7 @@ sample_users = {
 
 
 # Firestoreのユーザーが存在するかを確認する関数
-def check_user_exists(user_id: UUID, db: firestore.Client):
+def check_user_exists(user_id: str, db: firestore.Client):
     # Firestoreのコレクションからユーザードキュメントを取得
     user_doc_ref = db.collection('users').document(str(user_id))
     user_doc = user_doc_ref.get()
@@ -55,7 +55,7 @@ async def get_user_status(user_id: UUID):
 
 # フレンド登録API（Firestoreバージョン）
 @api.post("/users/{user_id}/friends")
-async def add_friend(user_id: UUID, friend_id: UUID, db: firestore.Client = Depends(get_firestore_client)):
+async def add_friend(user_id: str, friend_id: str, db: firestore.Client = Depends(get_firestore_client)):
     # Firestoreでユーザーが存在するか確認
     user_doc = check_user_exists(user_id, db)
 
@@ -72,7 +72,7 @@ async def add_friend(user_id: UUID, friend_id: UUID, db: firestore.Client = Depe
 
 # フレンド取得API
 @api.get("/users/{user_id}/friends")
-async def get_friends(user_id: UUID, db: firestore.Client = Depends(get_firestore_client)):
+async def get_friends(user_id: str, db: firestore.Client = Depends(get_firestore_client)):
     # ユーザーが存在するか確認
     user_doc = check_user_exists(user_id, db)
 
@@ -83,7 +83,7 @@ async def get_friends(user_id: UUID, db: firestore.Client = Depends(get_firestor
 
 # フレンド削除API（Firestore版）
 @api.delete("/users/{user_id}/friends/{friend_id}")
-async def delete_friend(user_id: UUID, friend_id: UUID, db: firestore.Client = Depends(get_firestore_client)):
+async def delete_friend(user_id: str, friend_id: str, db: firestore.Client = Depends(get_firestore_client)):
     # ユーザーとフレンドの存在確認
     user_doc = check_user_exists(user_id, db)
     friend_doc = check_user_exists(friend_id, db)
