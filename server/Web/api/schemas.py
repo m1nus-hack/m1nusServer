@@ -6,10 +6,8 @@ from uuid import UUID
 
 # 列挙型スキーマを宣言
 class StatusEnum(str, Enum):
-    created = 'created'
-    active = 'active'
-    inactive = 'inactive'
-    cancelled = 'cancelled'
+    open = 'open'
+    closed = 'closed'
 
 # ユーザーのステータススキーマ
 class UserStatus(BaseModel):
@@ -19,13 +17,13 @@ class UserStatus(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
-        # モデルが任意のフィールドを持つことを許可
+        # モデルが任意のフィールドを持つことを禁止する
         extra = "forbid"
         schema_extra = {
             "example": {
                 "user_id": "c9b1b9b5-5e8c-456a-a8f7-23dabaafca9a",
                 "name": "John Doe",
-                "status": "active",
+                "status": "open",
                 "created_at": "2023-09-20T15:03:00Z"
             }
         }

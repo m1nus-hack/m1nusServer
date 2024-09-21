@@ -6,7 +6,8 @@ verify_ssl = true
 [packages]
 fastapi = "*"
 uvicorn = "*"
-pyyaml = "*"
+python-dotenv = "*"
+google-cloud-firestore = "*"
 
 [requires]
 python_version = "3.10"
