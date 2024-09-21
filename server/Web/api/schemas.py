@@ -1,8 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field
-from typing import Optional, List
-from uuid import UUID
+from typing import List
 
 # 列挙型スキーマを宣言
 class StatusEnum(str, Enum):
