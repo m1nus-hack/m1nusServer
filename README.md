@@ -12,7 +12,7 @@ $ pipenv --rm # 仮想環境を削除
 
 ## API仕様書の画面表示
 ```sh
-$ uvicorn server.app:app --reload
+$ uvicorn server.Web.app:app --reload
 ```
 
 ## pipenv環境をvscodeで使用する方法

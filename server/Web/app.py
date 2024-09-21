@@ -4,7 +4,7 @@ from fastapi import FastAPI
 app = FastAPI()
 
 # server.api.apiモジュールをインポートし、ルーターを登録
-from server.api.api import api
+from server.Web.api.api import api
 
 # ルーターを登録
 app.include_router(api)
