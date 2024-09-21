@@ -11,13 +11,13 @@ sample_users = {
     UUID("c9b1b9b5-5e8c-456a-a8f7-23dabaafca9a"): UserStatus(
         user_id=UUID("c9b1b9b5-5e8c-456a-a8f7-23dabaafca9a"),
         name="Alice",
-        status=StatusEnum.active,
+        status=StatusEnum.open,
         created_at=datetime(2023, 9, 1)
     ),
     UUID("b5d9c9b9-b91e-45d6-90d1-40e91b9443ca"): UserStatus(
         user_id=UUID("b5d9c9b9-b91e-45d6-90d1-40e91b9443ca"),
         name="Bob",
-        status=StatusEnum.inactive,
+        status=StatusEnum.closed,
         created_at=datetime(2023, 6, 15)
     )
 }
