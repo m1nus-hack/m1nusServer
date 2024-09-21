@@ -42,16 +42,30 @@ def check_user_exists(user_id: str, db: firestore.Client):
 
 # 全ユーザーのステータスを取得するAPI
 @api.get("/users", response_model=UserList)
-async def get_all_user_status():
-    # sample_usersの値をリスト形式で取得し、レスポンスを返す
-    return UserList(users=list(sample_users.values()))
+async def get_all_user_status(db: firestore.Client = Depends(get_firestore_client)):
+    users_ref = db.collection("users")  # Firestoreのコレクション参照
+    docs = users_ref.stream()  # 全ユーザーのドキュメントをストリームで取得
 
-# ユーザーのステータスを取得するエンドポイント
+    # Firestoreから取得したユーザーのリストを構築
+    users = []
+    for doc in docs:
+        data = doc.to_dict()  # Firestoreドキュメントを辞書形式に変換
+        user = UserStatus(id=data["id"], status=data["status"])
+        users.append(user)
+
+    return UserList(users=users)
+
+# 特定のユーザーのステータスを取得するAPI
 @api.get("/users/{user_id}", response_model=UserStatus)
-async def get_user_status(user_id: UUID):
-    if user_id in sample_users:
-        return sample_users[user_id]
-    raise HTTPException(status_code=404, detail="User not found")
+async def get_user_status(user_id: str, db: firestore.Client = Depends(get_firestore_client)):
+    user_ref = db.collection("users").document(str(user_id))  # ユーザーIDに基づくドキュメント参照
+    user_doc = user_ref.get()
+
+    if user_doc.exists:
+        data = user_doc.to_dict()
+        return UserStatus(id=data["id"], status=data["status"])
+    else:
+        raise HTTPException(status_code=404, detail="User not found")
 
 # フレンド登録API（Firestoreバージョン）
 @api.post("/users/{user_id}/friends")
