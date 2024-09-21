@@ -1,0 +1,10 @@
+openapi: 3.0.3
+
+info:
+  title: API Server
+  description: hogehoge
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: URL for local development and testing

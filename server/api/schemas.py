@@ -1,0 +1,35 @@
+from datetime import datetime
+from enum import Enum
+from pydantic import BaseModel, Field
+from typing import Optional, List
+from uuid import UUID
+
+# 列挙型スキーマを宣言
+class StatusEnum(str, Enum):
+    created = 'created'
+    active = 'active'
+    inactive = 'inactive'
+    cancelled = 'cancelled'
+
+# ユーザーのステータススキーマ
+class UserStatus(BaseModel):
+    user_id: UUID
+    name: str
+    status: StatusEnum
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        # モデルが任意のフィールドを持つことを許可
+        extra = "forbid"
+        schema_extra = {
+            "example": {
+                "user_id": "c9b1b9b5-5e8c-456a-a8f7-23dabaafca9a",
+                "name": "John Doe",
+                "status": "active",
+                "created_at": "2023-09-20T15:03:00Z"
+            }
+        }
+
+# ユーザーのリストを返すスキーマ
+class UserList(BaseModel):
+    users: List[UserStatus]
