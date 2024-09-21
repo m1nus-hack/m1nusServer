@@ -1,8 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field
-from typing import Optional, List
-from uuid import UUID
+from typing import List
 
 # 列挙型スキーマを宣言
 class StatusEnum(str, Enum):
@@ -11,7 +10,7 @@ class StatusEnum(str, Enum):
 
 # ユーザーのステータススキーマ
 class UserStatus(BaseModel):
-    user_id: UUID
+    user_id: str
     name: str
     status: StatusEnum
     created_at: datetime = Field(default_factory=datetime.utcnow)
