@@ -1,8 +1,10 @@
+import os
+import json
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from uuid import UUID
 from datetime import datetime
 from google.cloud import firestore
+from google.oauth2 import service_account
 from server.Web.api.schemas import UserStatus, UserList, StatusEnum
 from server.Web.firestore import get_firestore_client
 
