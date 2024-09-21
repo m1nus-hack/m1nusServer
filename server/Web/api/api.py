@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from datetime import datetime
 from google.cloud import firestore
-from server.Web.api.schemas import UserStatus, UserList, StatusEnum
+from server.Web.api.schemas import UserStatus, UserList, DestinationRequest, CancelRequest
 from server.Web.firestore import get_firestore_client
 
 # FastAPIのルーターを作成
@@ -96,3 +95,51 @@ async def delete_friend(user_id: str, friend_id: str, db: firestore.Client = Dep
     })
 
     return {"message": "Friend deleted successfully"}
+
+# ユーザーがフレンドに「いく！」を押すエンドポイント
+@api.post("/users/{user_id}/destination")
+async def go_to_friend(user_id: str, request: DestinationRequest, db: firestore.Client = Depends(get_firestore_client)):
+    user_ref = db.collection('users').document(user_id)
+
+    # Firestoreでユーザーのドキュメントを更新
+    try:
+        user_ref.update({
+            "destination_user_id": request.destination_user_id  # 行き先のフレンドIDを設定
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # フレンドのcomming_friendsに追加
+    friend_ref = db.collection('users').document(request.destination_user_id)
+    try:
+        friend_ref.update({
+            "comming_friends": firestore.ArrayUnion([user_id])  # フレンドのリストに自分を追加
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"message": "Destination and comming friends updated successfully"}
+
+# ユーザーが「[いく！]ボタンキャンセル」を押すエンドポイント
+@api.patch("/users/{user_id}/cancel")
+async def cancel_trip(user_id: str, request: CancelRequest, db: firestore.Client = Depends(get_firestore_client)):
+    user_ref = db.collection('users').document(user_id)
+
+    # 自分のdestinationをクリア
+    try:
+        user_ref.update({
+            "destination_user_id": firestore.DELETE_FIELD  # 行き先を削除
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # フレンドのcomming_friendsリストから自分を削除
+    friend_ref = db.collection('users').document(request.friend_id)
+    try:
+        friend_ref.update({
+            "comming_friends": firestore.ArrayRemove([user_id])  # フレンドのリストから自分を削除
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"message": "Trip cancelled successfully"}
