@@ -11,8 +11,8 @@ class StatusEnum(str, Enum):
 # ユーザーのステータススキーマ
 class UserStatus(BaseModel):
     user_id: str
-    name: str
-    status: StatusEnum
+    name: str = "unknown"
+    status: StatusEnum = StatusEnum.closed
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
