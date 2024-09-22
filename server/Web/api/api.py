@@ -40,8 +40,13 @@ async def get_all_user_status(db: firestore.Client = Depends(get_firestore_clien
 
         created_at = data.get("created_at", datetime.utcnow())  # created_atがない場合のデフォルト
 
+        # memoフィールドを取得、存在しない場合や空の場合には空文字を使用
+        memo = data.get("memo", "")  # デフォルトで空文字を設定
+        # "address"が存在しない場合のデフォルト
+        address = data.get("address", "")  # addressフィールドを取得、存在しない場合には空文字を設定
+
         # Pydanticモデルに渡す
-        user = UserStatus(user_id=user_id, name=name, status=status, created_at=created_at)
+        user = UserStatus(user_id=user_id, name=name, status=status, created_at=created_at, memo=memo, address=address)
         users.append(user)
 
     return UserList(users=users)
@@ -69,8 +74,14 @@ async def get_user_status(user_id: str, db: firestore.Client = Depends(get_fires
         # "created_at"が存在しない場合のデフォルト
         created_at = data.get("created_at", datetime.utcnow())
 
+        # "memo"が存在しない場合のデフォルト
+        memo = data.get("memo", "")  # memoフィールドを取得、存在しない場合には空文字を設定
+
+        # "address"が存在しない場合のデフォルト
+        address = data.get("address", "")  # addressフィールドを取得、存在しない場合には空文字を設定
+
         # UserStatusモデルにデータを渡す
-        return UserStatus(user_id=user_id, name=name, status=status, created_at=created_at)
+        return UserStatus(user_id=user_id, name=name, status=status, created_at=created_at, memo=memo, address=address)
     else:
         raise HTTPException(status_code=404, detail="User not found")
 
